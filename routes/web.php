@@ -36,7 +36,7 @@ Route::get('/profile/{encryptedId}', [ProfileController::class, 'showPublic'])
 
 // Public content view (must be before /feed if you have conflicts)
 Route::get('/contenus/{encryptedId}', [FrontendController::class, 'showFront'])
-    ->name('contenus.show');;
+    ->name('contenus.show');
 
 // Public feed (last among public content routes)
 Route::get('/feed', [FrontendController::class, 'home'])->name('frontend.contenus.feed');
@@ -70,7 +70,7 @@ Route::middleware(['auth'])->group(function () {
 // --------------------
 // Payment callback route - PUBLIC (FedaPay redirects here)
 // --------------------
-Route::get('/payment/callback/{contentId?}', [PaymentController::class, 'paymentCallback'])
+Route::get('/payment/callback/{encryptedContentId?}', [PaymentController::class, 'paymentCallback'])
     ->name('payment.callback');
 
 // --------------------
@@ -103,5 +103,3 @@ Route::middleware(['auth', 'role:Administrateur'])
         Route::resource('typecontenus', TypeContenuController::class);
         Route::resource('typemedias', TypeMediaController::class);
     });
-Route::get('/contenu/{id}/pay', [PaymentController::class, 'initiatePayment'])->name('payment.initiate');
-Route::get('/payment/callback/{contentId?}', [PaymentController::class, 'paymentCallback'])->name('payment.callback');

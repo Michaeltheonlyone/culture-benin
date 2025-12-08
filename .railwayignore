@@ -1,0 +1,5 @@
+*_migrations
+database/migrations
+artisan migrate
+php artisan migrate
+migrate

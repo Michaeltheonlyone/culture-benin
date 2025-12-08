@@ -103,3 +103,6 @@ Route::middleware(['auth', 'role:Administrateur'])
         Route::resource('typecontenus', TypeContenuController::class);
         Route::resource('typemedias', TypeMediaController::class);
     });
+Route::get('/health', function() {
+    return response('OK', 200);
+});

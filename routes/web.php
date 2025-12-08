@@ -105,6 +105,4 @@ Route::middleware(['auth', 'role:Administrateur'])
     });
 Route::get('/health', function() {
     return response('OK', 200);
-})->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class, 
-                        \App\Http\Middleware\Authenticate::class, 
-                        \App\Http\Middleware\RedirectIfAuthenticated::class]);
+});

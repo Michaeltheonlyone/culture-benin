@@ -7,19 +7,21 @@ use App\Models\Contenu;
 use Illuminate\Support\Facades\Auth;
 use FedaPay\FedaPay;
 use FedaPay\Transaction;
+use App\Helpers\UrlEncrypter;
 
 class PaymentController extends Controller
 {
     /**
      * Initiate payment for content access
      */
-    public function initiatePayment(Request $request, $contentId)
+    public function initiatePayment($encryptedContentId)
     {
         if (!Auth::check()) {
             return redirect()->route('login')
                 ->with('error', 'Veuillez vous connecter pour effectuer un paiement.');
         }
 
+        $contentId = UrlEncrypter::decrypt($encryptedContentId);
         $content = Contenu::findOrFail($contentId);
         $user = Auth::user();
         $amount = 50000; // 500 XOF in cents
@@ -44,13 +46,14 @@ class PaymentController extends Controller
                 'description' => "Accès au contenu: " . ($content->titre ?? 'Contenu #' . $content->id),
                 'currency' => ['iso' => 'XOF'],
                 'customer' => $customerData,
-                'callback_url' => route('payment.callback', ['contentId' => $contentId])
+                'callback_url' => route('payment.callback', ['encryptedContentId' => $encryptedContentId])
             ]);
 
             // Store transaction ID in session
             session([
                 'payment_transaction_id' => $transaction->id,
                 'payment_content_id' => $contentId,
+                'payment_encrypted_content_id' => $encryptedContentId,
             ]);
 
             // Use generateToken() instead of generatePaymentUrl()
@@ -58,7 +61,7 @@ class PaymentController extends Controller
             return redirect()->away($token->url);
 
         } catch (\Exception $e) {
-            return redirect()->route('contenus.show', $contentId)
+            return redirect()->route('contenus.show', $encryptedContentId)
                 ->with('error', 'Erreur lors de l\'initialisation du paiement: ' . $e->getMessage());
         }
     }
@@ -66,12 +69,13 @@ class PaymentController extends Controller
     /**
      * Payment callback from FedaPay
      */
-    public function paymentCallback(Request $request, $contentId = null)
+    public function paymentCallback(Request $request, $encryptedContentId = null)
     {
-        $contentId = $contentId ?? session('payment_content_id');
+        $encryptedContentId = $encryptedContentId ?? session('payment_encrypted_content_id');
+        $contentId = session('payment_content_id');
         $transactionId = $request->input('transaction_id') ?? session('payment_transaction_id');
 
-        if (!$transactionId || !$contentId) {
+        if (!$transactionId || !$contentId || !$encryptedContentId) {
             return redirect()->route('frontend.contenus.feed')
                 ->with('error', 'Session de paiement invalide.');
         }
@@ -89,22 +93,26 @@ class PaymentController extends Controller
                 session(["paid_content_{$contentId}" => true]);
 
                 // Clear session
-                session()->forget(['payment_content_id', 'payment_transaction_id']);
+                session()->forget([
+                    'payment_content_id', 
+                    'payment_transaction_id',
+                    'payment_encrypted_content_id'
+                ]);
 
-                return redirect()->route('contenus.show', $contentId)
+                return redirect()->route('contenus.show', $encryptedContentId)
                     ->with('success', 'Paiement réussi! Vous avez maintenant accès au contenu.');
 
             } elseif ($status === 'canceled') {
-                return redirect()->route('contenus.show', $contentId)
+                return redirect()->route('contenus.show', $encryptedContentId)
                     ->with('error', 'Paiement annulé.');
 
             } else {
-                return redirect()->route('contenus.show', $contentId)
+                return redirect()->route('contenus.show', $encryptedContentId)
                     ->with('error', 'Paiement échoué. Statut: ' . $status);
             }
 
         } catch (\Exception $e) {
-            return redirect()->route('contenus.show', $contentId)
+            return redirect()->route('contenus.show', $encryptedContentId)
                 ->with('error', 'Erreur de vérification du paiement: ' . $e->getMessage());
         }
     }

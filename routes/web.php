@@ -31,14 +31,12 @@ Route::get('/contenus/region/{id}', [FrontendController::class, 'showByRegion'])
 Route::get('/region/{id}', [FrontendController::class, 'showByRegion'])->name('frontend.region');
 
 // Public profile view (must be before /profile/edit)
-Route::get('/profile/{id}', [ProfileController::class, 'showPublic'])
-    ->where('id', '[0-9]+') // Only match numeric IDs
+Route::get('/profile/{encryptedId}', [ProfileController::class, 'showPublic'])
     ->name('frontend.profile.show');
 
 // Public content view (must be before /feed if you have conflicts)
-Route::get('/contenus/{id}', [FrontendController::class, 'showFront'])
-    ->where('id', '[0-9]+') // Only match numeric IDs
-    ->name('contenus.show');
+Route::get('/contenus/{encryptedId}', [FrontendController::class, 'showFront'])
+    ->name('contenus.show');;
 
 // Public feed (last among public content routes)
 Route::get('/feed', [FrontendController::class, 'home'])->name('frontend.contenus.feed');
@@ -65,7 +63,7 @@ Route::middleware(['auth'])->group(function () {
     
     // ========== PAYMENT ROUTES ==========
     // Payment initiation (user clicks "Payer" button)
-    Route::get('/payment/initiate/{contentId}', [PaymentController::class, 'initiatePayment'])
+    Route::get('/payment/initiate/{encryptedContentId}', [PaymentController::class, 'initiatePayment'])
         ->name('payment.initiate');
 });
 
@@ -107,19 +105,3 @@ Route::middleware(['auth', 'role:Administrateur'])
     });
 Route::get('/contenu/{id}/pay', [PaymentController::class, 'initiatePayment'])->name('payment.initiate');
 Route::get('/payment/callback/{contentId?}', [PaymentController::class, 'paymentCallback'])->name('payment.callback');
-Route::get('/check-cloudinary-config', function() {
-    echo "<pre>";
-    echo "Config check:\n";
-    echo "cloud_name: " . config('cloudinary.cloud_name') . "\n";
-    echo "api_key: " . config('cloudinary.api_key') . "\n";
-    echo "api_secret: " . (config('cloudinary.api_secret') ? 'SET' : 'NOT SET') . "\n";
-    
-    // Check if Cloudinary facade works
-    try {
-        $cloudinary = app('cloudinary');
-        echo "\nCloudinary facade: OK\n";
-    } catch (\Exception $e) {
-        echo "\nCloudinary facade error: " . $e->getMessage() . "\n";
-    }
-    echo "</pre>";
-});

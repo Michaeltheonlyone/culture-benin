@@ -9,7 +9,7 @@ use App\Models\TypeMedia;
 use App\Models\Region;
 use App\Models\Langue;
 use App\Models\User;
-
+use App\Helpers\UrlEncrypter;
 
 class FrontendController extends Controller
 {
@@ -127,8 +127,9 @@ class FrontendController extends Controller
         ));
     }
 
-    public function showFront($id)
+    public function showFront($encryptedId)
     {    
+        $id = UrlEncrypter::decrypt($encryptedId);
         $regions = Region::all();
         $typesContenu = TypeContenu::all();
         $typesMedia = TypeMedia::all();
@@ -195,5 +196,4 @@ class FrontendController extends Controller
             'randomUsers', 'randomContent'
         ));
     }
-    
 }

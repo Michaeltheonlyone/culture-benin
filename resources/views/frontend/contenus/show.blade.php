@@ -241,14 +241,14 @@
                 <!-- Author Header -->
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('frontend.profile.show', $contenu->user->id ?? $contenu->auteur->id ?? '#') }}" 
+                        <a href="{{ route('frontend.profile.show', \App\Helpers\UrlEncrypter::encrypt($contenu->user->id ?? $contenu->auteur->id ?? '#')) }}" 
                            class="flex items-center gap-3 group">
                             <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white">
                                 {{ substr($contenu->auteur->prenom ?? $contenu->user->name ?? 'A', 0, 1) }}
                             </div>
                             <div>
                                 <div class="font-bold text-gray-900 group-hover:text-blue-700 transition">
-                                    {{ $contenu->auteur->prenom ?? '' }} {{ $contenu->auteur->nom ?? $contenu->user->name ?? 'Utilisateur' }}
+                                    {{ $contenu->auteur->prenum ?? '' }} {{ $contenu->auteur->nom ?? $contenu->user->name ?? 'Utilisateur' }}
                                 </div>
                                 <div class="text-sm text-gray-600 flex items-center gap-2">
                                     <span>{{ $contenu->created_at->diffForHumans() }}</span>
@@ -299,7 +299,7 @@
             </p>
             
             @auth
-                <a href="{{ route('payment.initiate', $contenu->id) }}" 
+                <a href="{{ route('payment.initiate', \App\Helpers\UrlEncrypter::encrypt($contenu->id)) }}" 
                    class="block w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition duration-300 mb-2">
                     <i class="fas fa-lock-open"></i>
                     Débloquer le contenu complet - 500 XOF
@@ -551,7 +551,7 @@
                 </h3>
                 <div class="space-y-4">
                     @forelse($random as $r)
-                        <a href="{{ route('contenus.show', $r->id) }}" 
+                        <a href="{{ route('contenus.show', \App\Helpers\UrlEncrypter::encrypt($r->id)) }}" 
                            class="block p-3 rounded-lg hover:bg-blue-50 transition duration-300 border border-gray-100">
                             <div class="font-bold text-gray-900 group-hover:text-blue-700 transition duration-300">
                                 {{ \Illuminate\Support\Str::limit($r->titre ?? 'Sans titre', 40) }}
@@ -580,7 +580,7 @@
                 </h3>
                 <div class="space-y-3">
                     @forelse($topProfiles as $user)
-                        <a href="{{ route('frontend.profile.show', $user->id) }}" 
+                        <a href="{{ route('frontend.profile.show', \App\Helpers\UrlEncrypter::encrypt($user->id)) }}"
                            class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition duration-300 group">
                             <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white">
                                 {{ substr($user->name ?? ($user->prenom.' '.$user->nom), 0, 1) }}

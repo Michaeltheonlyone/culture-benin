@@ -106,6 +106,7 @@
 @php
     use App\Models\Langue;
     use App\Models\TypeContenu;
+    use App\Helpers\UrlEncrypter;
     
     if (!isset($langues)) {
         $langues = Langue::orderBy('nom_langue')->get();
@@ -371,7 +372,7 @@
                         </div>
 
                         <!-- Post Content - 280 chars limit -->
-                        <a href="{{ route('contenus.show', $post->id) }}" class="block group">
+                        <a href="{{ route('contenus.show', UrlEncrypter::encrypt($post->id)) }}" class="block group">
                             @if($post->titre)
                                 <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-700 transition duration-300 mb-2">
                                     {{ $post->titre }}
@@ -535,7 +536,7 @@
                 </h3>
                 <div class="space-y-4">
                     @forelse($random as $r)
-                        <a href="{{ route('contenus.show', $r->id) }}" 
+                        <a href="{{ route('contenus.show', UrlEncrypter::encrypt($r->id)) }}" 
                            class="block p-3 rounded-lg hover:bg-blue-50 transition duration-300 border border-gray-100">
                             <div class="font-bold text-gray-900 group-hover:text-blue-700 transition duration-300">
                                 {{ \Illuminate\Support\Str::limit($r->titre ?? 'Sans titre', 40) }}
@@ -565,7 +566,7 @@
                 <div class="space-y-3">
                     @forelse($topProfiles as $puser)
                         @if($puser->id !== $user->id)
-                            <a href="{{ route('frontend.profile.show', $puser->id) }}" 
+                            <a href="{{ route('frontend.profile.show', UrlEncrypter::encrypt($puser->id)) }}" 
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition duration-300 group">
                                 <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white">
                                     {{ substr($puser->name ?? ($puser->prenom.' '.$puser->nom), 0, 1) }}

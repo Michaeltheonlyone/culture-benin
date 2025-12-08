@@ -10,7 +10,6 @@ use App\Models\TypeContenu;
 use App\Models\TypeMedia;
 use App\Models\Region;
 use App\Models\Media;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ContenusController extends Controller
 {
@@ -55,11 +54,9 @@ class ContenusController extends Controller
 
         if ($request->hasFile('medias')) {
             foreach ($request->file('medias') as $file) {
-                $uploadedFile = $file->storeOnCloudinary('culture-benin');
-                $url = $uploadedFile->getSecurePath();
-                
+                $path = $file->store('uploads', 'public');
                 Media::create([
-                    'url' => $url,
+                    'url' => 'storage/' . $path,
                     'titre_media' => $file->getClientOriginalName(),
                     'id_contenu' => $contenu->id,
                 ]);
@@ -69,43 +66,42 @@ class ContenusController extends Controller
         return redirect()->route('backend.contenus.index')->with('success', 'Contenu ajouté.');
     }
 
-    public function storeFront(Request $request)
-    {
-        $typeContenuModel = new TypeContenu;
-        $typeMediaModel   = new TypeMedia;
-        $regionModel      = new Region;
+   public function storeFront(Request $request)
+{
+    $typeContenuModel = new TypeContenu;
+    $typeMediaModel   = new TypeMedia;
+    $regionModel      = new Region;
 
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'contenu' => 'required|string',
-            'id_type_contenu' => 'nullable|exists:'.$typeContenuModel->getTable().','.$typeContenuModel->getKeyName(),
-            'id_type_media'   => 'nullable|exists:'.$typeMediaModel->getTable().','.$typeMediaModel->getKeyName(),
-            'id_region'       => 'nullable|exists:'.$regionModel->getTable().','.$regionModel->getKeyName(),
-            'parent_id'       => 'nullable|exists:'.$this->getModelTable(Contenu::class).',id',
-            'id_langue' => 'required|exists:langues,id_langue'
-        ]);
+    $request->validate([
+        'titre' => 'required|string|max:255',
+        'contenu' => 'required|string',
+        'id_type_contenu' => 'nullable|exists:'.$typeContenuModel->getTable().','.$typeContenuModel->getKeyName(),
+        'id_type_media'   => 'nullable|exists:'.$typeMediaModel->getTable().','.$typeMediaModel->getKeyName(),
+        'id_region'       => 'nullable|exists:'.$regionModel->getTable().','.$regionModel->getKeyName(),
+        'parent_id'       => 'nullable|exists:'.$this->getModelTable(Contenu::class).',id',
+        'id_langue' => 'required|exists:langues,id_langue'
+    ]);
 
-        $data = $request->only(['titre','contenu','id_type_contenu','id_type_media','id_region','parent_id','id_langue']);
-        $data['id_utilisateur'] = Auth::user()->id_utilisateur ?? Auth::id();
+    $data = $request->only(['titre','contenu','id_type_contenu','id_type_media','id_region','parent_id','id_langue']);
+    $data['id_utilisateur'] = Auth::user()->id_utilisateur ?? Auth::id();
 
-        $contenu = Contenu::create($data);
+    $contenu = Contenu::create($data);
 
-        if ($request->hasFile('medias')) {
-            foreach ($request->file('medias') as $file) {
-                $uploadedFile = $file->storeOnCloudinary('culture-benin');
-                $url = $uploadedFile->getSecurePath();
-                
-                Media::create([
-                    'url' => $url,
-                    'titre_media' => $file->getClientOriginalName(),
-                    'id_type_media' => $request->id_type_media,
-                    'id_contenu' => $contenu->id,
-                ]);
-            }
+    if ($request->hasFile('medias')) {
+        foreach ($request->file('medias') as $file) {
+            $path = $file->store('uploads', 'public'); // saves to storage/app/public/uploads
+
+            Media::create([
+                'url' => 'storage/'.$path, // no leading slash
+                'titre_media' => $file->getClientOriginalName(),
+                'id_type_media' => $request->id_type_media, // FIX: set type
+                'id_contenu' => $contenu->id,
+            ]);
         }
-
-        return redirect()->route('frontend.contenus.feed')->with('success', 'Publication ajoutée.');
     }
+
+    return redirect()->route('frontend.contenus.feed')->with('success', 'Publication ajoutée.');
+}
 
     public function show($id)
     {
@@ -145,11 +141,9 @@ class ContenusController extends Controller
 
         if ($request->hasFile('medias')) {
             foreach ($request->file('medias') as $file) {
-                $uploadedFile = $file->storeOnCloudinary('culture-benin');
-                $url = $uploadedFile->getSecurePath();
-                
+                $path = $file->store('uploads', 'public');
                 Media::create([
-                    'url' => $url,
+                    'url' => 'storage/' . $path,
                     'titre_media' => $file->getClientOriginalName(),
                     'id_contenu' => $contenu->id,
                 ]);
@@ -164,7 +158,10 @@ class ContenusController extends Controller
         $contenu = Contenu::findOrFail($id);
 
         foreach ($contenu->medias as $m) {
-            // Files are on Cloudinary, just delete database record
+            if (!empty($m->url)) {
+                $file = preg_replace('#^storage/#', '', $m->url);
+                Storage::disk('public')->delete($file);
+            }
             $m->delete();
         }
 
@@ -199,8 +196,10 @@ class ContenusController extends Controller
     }
 
     // Show a single contenu (public view)
-    public function showFront($id)
+    public function showFront($encryptedId)
     {
+         
+        $id = \App\Helpers\UrlEncrypter::decrypt($encryptedId);
         $contenu = Contenu::with(['typeContenu','typeMedia','region','medias','auteur','commentaires'])
             ->findOrFail($id);
 

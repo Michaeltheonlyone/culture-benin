@@ -274,7 +274,7 @@
                         <!-- Author Header -->
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('frontend.profile.show', $contenu->user->id ?? $contenu->auteur->id ?? '#') }}" 
+                                <a href="/profile/{{ App\Helpers\UrlEncrypter::encrypt($contenu->user->id ?? $contenu->auteur->id ?? '#') }}" 
                                    class="flex items-center gap-3 group">
                                     <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white">
                                         {{ substr($contenu->auteur->prenom ?? $contenu->user->name ?? 'A', 0, 1) }}
@@ -300,7 +300,7 @@
                         </div>
 
                         <!-- Content -->
-                        <a href="{{ route('contenus.show', $contenu->id) }}" class="block group">
+                        <a href="/contenus/{{ App\Helpers\UrlEncrypter::encrypt($contenu->id) }}" class="block group">
                             @if($contenu->titre)
                                 <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-700 transition duration-300 mb-2">
                                     {{ $contenu->titre }}
@@ -483,7 +483,7 @@
                 </h3>
                 <div class="space-y-3">
                     @forelse($topProfiles as $user)
-                        <a href="{{ route('frontend.profile.show', $user->id) }}" 
+                        <a href="/profile/{{ App\Helpers\UrlEncrypter::encrypt($user->id) }}" 
                            class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition duration-300 group">
                             <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white">
                                 {{ substr($user->name ?? ($user->prenom.' '.$user->nom), 0, 1) }}

@@ -110,4 +110,6 @@ Route::get('/health', function() {
     \App\Http\Middleware\Authenticate::class,
     \App\Http\Middleware\RedirectIfAuthenticated::class
 ]);
-
+Route::get('/test', function() {
+    return 'App works';
+});
